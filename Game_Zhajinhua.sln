@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game_Zhajinhua.CSharp.Plugins", "Game_Zhajinhua.CSharp.Plugins.csproj", "{33BFD58A-7D93-32F6-4074-3BC0A4D09291}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game_Zhajinhua.CSharp", "Game_Zhajinhua.CSharp.csproj", "{E7054945-8589-1395-ECE4-06A8F9BD8CE1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game_Zhajinhua.CSharp.Editor", "Game_Zhajinhua.CSharp.Editor.csproj", "{D80F3EFF-9702-CBCF-5A95-1F6443FF0AD7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{33BFD58A-7D93-32F6-4074-3BC0A4D09291}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33BFD58A-7D93-32F6-4074-3BC0A4D09291}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33BFD58A-7D93-32F6-4074-3BC0A4D09291}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33BFD58A-7D93-32F6-4074-3BC0A4D09291}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7054945-8589-1395-ECE4-06A8F9BD8CE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7054945-8589-1395-ECE4-06A8F9BD8CE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7054945-8589-1395-ECE4-06A8F9BD8CE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7054945-8589-1395-ECE4-06A8F9BD8CE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D80F3EFF-9702-CBCF-5A95-1F6443FF0AD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D80F3EFF-9702-CBCF-5A95-1F6443FF0AD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D80F3EFF-9702-CBCF-5A95-1F6443FF0AD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D80F3EFF-9702-CBCF-5A95-1F6443FF0AD7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
