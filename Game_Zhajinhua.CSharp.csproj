@@ -321,6 +321,7 @@
     <Compile Include="Assets\Scripts\BattleFramework\Data\DataCenter.cs" />
     <Compile Include="Assets\Scripts\BattleFramework\Data\Entity\AvatarModelData.cs" />
     <Compile Include="Assets\Scripts\BattleFramework\Data\Entity\CameraAnimData.cs" />
+    <Compile Include="Assets\Scripts\BattleFramework\Data\Entity\CardData.cs" />
     <Compile Include="Assets\Scripts\BattleFramework\Data\Entity\EffectData.cs" />
     <Compile Include="Assets\Scripts\BattleFramework\Data\Entity\EquipData.cs" />
     <Compile Include="Assets\Scripts\BattleFramework\Data\Entity\GameBaseData.cs" />
@@ -353,7 +354,12 @@
     <Compile Include="Assets\Scripts\GUI\IViewBase.cs" />
     <Compile Include="Assets\Scripts\GUI\LoadingPanel\LoadingPanel.cs" />
     <Compile Include="Assets\Scripts\GUI\LoginPanel\LoginPanel.cs" />
+    <Compile Include="Assets\Scripts\GUI\MainScenePanel\MainScenePanel.cs" />
     <Compile Include="Assets\Scripts\GUI\ResCheckPanel\ResCheckPanel.cs" />
+    <Compile Include="Assets\Scripts\GameLogic\CardItem.cs" />
+    <Compile Include="Assets\Scripts\GameLogic\MySelfHead.cs" />
+    <Compile Include="Assets\Scripts\GameLogic\PlayerData.cs" />
+    <Compile Include="Assets\Scripts\GameLogic\PlayerHead.cs" />
     <Compile Include="Assets\Scripts\GameStateManager\GameState\BattleState.cs" />
     <Compile Include="Assets\Scripts\GameStateManager\GameState\CityState.cs" />
     <Compile Include="Assets\Scripts\GameStateManager\GameState\FieldState.cs" />

@@ -41,8 +41,10 @@ public class LoginPanel : IViewBase
 
     private void OnLoginGameHandler()
     {
+        GUIManager.ShowView(PanelNameConst.MainScenePanel);
+        GUIManager.HideView(PanelNameConst.LoginPanel);
         //LoginGame();
-        GameStateManager.LoadScene(2);
+        //GameStateManager.LoadScene(2);
     }
     public void LoginGame(string accountName = "aa", string password = "bb")
     {
