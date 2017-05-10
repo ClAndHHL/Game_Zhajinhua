@@ -19,13 +19,16 @@ public abstract class IViewBase
 
     public UIPanelLayers uiLayer = UIPanelLayers.NormalLayer;
     public GameObject panelObj = null;
-	public void Start()
+	public void Start(bool isSetAnchor = true)
     {
-        panelObj.GetComponent<RectTransform>().anchoredPosition3D = Vector3.zero;
-        panelObj.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
-        panelObj.GetComponent<RectTransform>().anchorMax = new Vector2(1, 1);
-        panelObj.GetComponent<RectTransform>().offsetMin = Vector2.zero;
-        panelObj.GetComponent<RectTransform>().offsetMax = Vector2.zero;
+        if (isSetAnchor)
+        {
+            panelObj.GetComponent<RectTransform>().anchoredPosition3D = Vector3.zero;
+            panelObj.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
+            panelObj.GetComponent<RectTransform>().anchorMax = new Vector2(1, 1);
+            panelObj.GetComponent<RectTransform>().offsetMin = Vector2.zero;
+            panelObj.GetComponent<RectTransform>().offsetMax = Vector2.zero;
+        }
         OnStart();
     }
     public void Destroy()
@@ -68,5 +71,9 @@ public abstract class IViewBase
     protected T Find<T>(string namePath)
     {
         return panelObj.transform.Find(namePath).GetComponent<T>();
+    }
+    public bool IsHide()
+    {
+        return panelObj.gameObject.activeSelf;
     }
 }

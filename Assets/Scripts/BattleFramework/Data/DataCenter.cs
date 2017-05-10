@@ -13,6 +13,7 @@ namespace BattleFramework.Data
         public List<GameBaseData> list_GameBaseData;
         public List<GameSceneData> list_GameSceneData;
         public List<GoodsData> list_GoodsData;
+        public List<JettonData> list_JettonData;
         public List<ResourceData> list_ResourceData;
   
         public static DataCenter Instance ()
@@ -35,6 +36,7 @@ namespace BattleFramework.Data
             list_GameBaseData = GameBaseData.LoadDatas ();
             list_GameSceneData = GameSceneData.LoadDatas ();
             list_GoodsData = GoodsData.LoadDatas ();
+            list_JettonData = JettonData.LoadDatas ();
             list_ResourceData = ResourceData.LoadDatas ();
         }
  
