@@ -24,14 +24,10 @@ public class BiPaiPanel : IViewBase {
     {
         base.RemoveEventListener();
     }
-    public void SetData(PlayerHead head1,PlayerHead head2)
-    {
-        headList[0].SetPlayerData(head1);
-        headList[1].SetPlayerData(head2);
-    }
     protected override void OnShow(params object[] args)
     {
-        
+        headList[0].SetPlayerData(args[0] as PlayerHead);
+        headList[1].SetPlayerData(args[1] as PlayerHead);
     }
 
     protected override void OnHide()

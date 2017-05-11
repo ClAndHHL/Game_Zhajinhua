@@ -74,6 +74,6 @@ public abstract class IViewBase
     }
     public bool IsHide()
     {
-        return panelObj.gameObject.activeSelf;
+        return panelObj.gameObject.activeSelf == false;
     }
 }

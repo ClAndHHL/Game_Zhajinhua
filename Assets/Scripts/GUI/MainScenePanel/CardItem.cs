@@ -20,18 +20,15 @@ public class CardItem : MonoBehaviour {
 
     internal void GiveUp()
     {
-        if (data != null)
-        {
-            return;
-        }
-        if (graySprite == null)
-        {
-            graySprite = Resources.Load<Sprite>("Textures/joker/gray");
-        }
-        this.GetComponent<Image>().sprite = graySprite;
+        this.GetComponent<Image>().color = Color.gray;
     }
     public void Reset()
     {
-        this.GetComponent<Image>().sprite = sourceSprite;
+        if (sourceSprite !=null)
+        {
+            this.GetComponent<Image>().sprite = sourceSprite;
+        }
+        this.GetComponent<Image>().color = Color.white;
+        data = null;
     }
 }

@@ -29,9 +29,14 @@ public class MainScenePanel : IViewBase
     private Transform moneyObj;
     private Transform moneyParentCon;
     private int genzhuTotalNum = 0;//跟住次数
+    private int minBipaiGenzhuNum = 3;//比较牌的最小轮数
+    private int maxZuidalun = 30;
     private Transform buttonParentCon;
     private JiazhuPanel jiazhupanel;
     private BiPaiPanel bipaipanel;
+    private ResultChildPanel resultPanel;
+    private GuizeChildPanel guizePanel;
+    private PlayerHead winnerPlayer;
 
     private JettonData minJettionData;
     protected override void OnStart()
@@ -68,7 +73,39 @@ public class MainScenePanel : IViewBase
         bipaipanel.Start(false);
         bipaipanel.Hide();
 
+        resultPanel = new ResultChildPanel();
+        resultPanel.panelObj = Find<Transform>("ResultPanel").gameObject;
+        resultPanel.Start(false);
+        resultPanel.Hide();
+
         minJettionData = JettonData.GetByID(1);
+
+        guizePanel= new GuizeChildPanel();
+        guizePanel.panelObj = Find<Transform>("GuizePanel").gameObject;
+        guizePanel.Start(false);
+        ResetGuize();
+    }
+    private void ResetGuize()
+    {
+        guizePanel.Reset();
+        guizePanel.SetGuoDi(100);
+        guizePanel.SetDingZhu(1000);
+        guizePanel.SetZongZhuAdd(0);
+        guizePanel.SetZuidalun(0, maxZuidalun);
+        guizePanel.SetKebilun(0, minBipaiGenzhuNum);
+    }
+    private int GenzhuTotalNum
+    {
+        get
+        {
+            return genzhuTotalNum;
+        }
+        set
+        {
+            genzhuTotalNum = value;
+            guizePanel.SetZuidalun(genzhuTotalNum, maxZuidalun);
+            guizePanel.SetKebilun(genzhuTotalNum, minBipaiGenzhuNum);
+        }
     }
     private void EnabledAllButton(bool flag)
     {
@@ -103,13 +140,50 @@ public class MainScenePanel : IViewBase
         CreatePlayerCardData(0);
         CreatePlayerCardData(playerIndex);
 
-        
-        bipaipanel.Show();
-        bipaipanel.SetData(obj, headList[0]);
+
+        bipaipanel.Show(obj, headList[0]);
         HideAllBiPaiButton();
         Mogo.Util.TimerHeap.AddTimer<PlayerHead, PlayerHead>(2000, 0, BiPaiResult, obj, headList[0]);
     }
+    private void SetWinner(PlayerHead head)
+    {
+        winnerPlayer = head;
+        if (bipaipanel.IsHide() == false)
+        {
+            bipaipanel.Hide();
+        }
+        if (winnerPlayer != null)
+        {
+            Debug.LogError("本轮结束，胜出者：" + head.data.name);
+        }
+        EnabledAllButton(false);
+        ReadlyButton.gameObject.SetActive(true);
+        ReadlyButton.interactable = true;
+        buttonParentCon.gameObject.SetActive(false);
 
+        for (int i = 0; i < jettonObjList.Count; i++)
+        {
+            jettonObjList[i].transform.DOMove(head.transform.position, 1.5f);
+        }
+        int jettonTotal = 0;
+        for (int i = 0; i < headList.Count; i++)
+        {
+            jettonTotal += headList[i].GetChangeJetton();
+        }
+        head.ChangeJetton(Mathf.Abs(jettonTotal));
+        Mogo.Util.TimerHeap.AddTimer(1500, 0, AddJetton);
+    }
+    /// <summary>
+    /// 收获筹码
+    /// </summary>
+    private void AddJetton()
+    {
+        for (int i = 0; i < jettonObjList.Count; i++)
+        {
+            jettonObjList[i].gameObject.SetActive(false);
+        }
+        resultPanel.Show(headList);
+    }
     private void BiPaiResult(PlayerHead head1, PlayerHead head2)
     {
         bipaipanel.Hide();
@@ -122,14 +196,15 @@ public class MainScenePanel : IViewBase
         {
             head1.IsOver = true;
         }
-        if (head is MySelfHead == false)
+
+        PlayerHead nextPlayer = GetCanBipaiPlayer(head);
+        if(nextPlayer == null)
         {
-            EnabledAllButton(false);
-            ReadlyButton.gameObject.SetActive(true);
-            ReadlyButton.interactable = false;
-            buttonParentCon.gameObject.SetActive(false);
+            SetWinner(head);
+            return;
         }
-        Debug.LogError("最大的牌：" + head.data.name);
+        //Debug.LogError("最大的牌：" + head.data.name);
+        NextPlayerOpaHandler(head2);
     }
     private void HideAllBiPaiButton()
     {
@@ -171,9 +246,78 @@ public class MainScenePanel : IViewBase
     /// </summary>
     private void ReadlyButtonOnClick()
     {
+        ResetGuize();
         ReadlyButton.gameObject.SetActive(false);
         buttonParentCon.gameObject.SetActive(true);
-        ShowCardTimeId = Mogo.Util.TimerHeap.AddTimer(500, 50, ReadlyCard);
+        //数据清理还原
+        tempCardIndex = 0;
+        if (readlyCardItemList.Count>0)//已经准备好了
+        {
+            for (int i = 0; i < readlyCardItemList.Count; i++)
+            {
+                readlyCardItemList[i].Reset();
+            }
+        }
+        for (int i = 0; i < headList.Count; i++)
+        {
+            headList[i].Reset();
+        }
+        winnerPlayer = null;
+        minJettionData = JettonData.GetByID(1);
+        ResetData();
+        ReadlyCard();
+        resultPanel.Hide();
+        //下锅底
+        for (int i = 0; i < headList.Count; i++)
+        {
+            BetJetton(headList[i]);
+        }
+        GenzhuTotalNum = 1;
+    }
+    /// <summary>
+    /// 整理牌
+    /// </summary>
+    private void ReadlyCard()
+    {
+        if (readlyCardItemList.Count > 0)
+        {
+            
+        }
+        else
+        {
+            for (int i = 0; i < readlyMaxNum; i++)
+            {
+                GameObject card = GameObject.Instantiate<GameObject>(Resources.Load<GameObject>("GUI/CardPrefab"));
+                card.transform.SetParent(CardItemParent);
+                card.transform.localScale = Vector3.one;
+                CardItem item = card.AddComponent<CardItem>();
+                readlyCardItemList.Add(item);
+            }
+        }
+        for (int i = 0; i < readlyCardItemList.Count; i++)
+        {
+            readlyCardItemList[i].transform.Reset();
+            readlyCardItemList[i].gameObject.SetActive(false);
+        }
+        
+        ShowCardTimeId = Mogo.Util.TimerHeap.AddTimer(500, 50, ReadlyCardAnimation);
+    }
+    private void ReadlyCardAnimation()
+    {
+        if (tempCardIndex >= readlyMaxNum)
+        {
+            Mogo.Util.TimerHeap.DelTimer(ShowCardTimeId);
+            tempCardIndex = 0;
+            ShowCardTimeId = Mogo.Util.TimerHeap.AddTimer(1000, 80, FaPaiHandler);
+            return;
+        }
+        GameObject card = readlyCardItemList[tempCardIndex].gameObject;
+        card.SetActive(true);
+        card.transform.SetAsLastSibling();
+        //布局
+        int x = tempCardIndex * gap - (readlyMaxNum / 2) * gap;
+        card.GetComponent<RectTransform>().anchoredPosition = new Vector2(x, 130);
+        tempCardIndex++;
     }
     /// <summary>
     /// 比较大小
@@ -186,72 +330,301 @@ public class MainScenePanel : IViewBase
         }
         
     }
-    private int genzhuIndex = 0;
     private void QiButtonOnClick()
     {
         EnabledAllButton(false);
         GiveUp(0);
+        NextPlayerOpaHandler(headList[0]);
     }
     private void GiveUp(int playerIndex)
     {
         headList[playerIndex].GiveUp();
     }
+    private int dijilun_num = 0;
     private void GenZhuButtonOnClick()
     {
-        if (genzhuIndex>0)
-        {
-            return;
-        }
-        if(genzhuTotalNum == 0)
+        if(GenzhuTotalNum >1)
         {
             KanButton.interactable = true;
             QiButton.interactable = true;
         }
-        if (genzhuTotalNum>=3)
-        {
-            BiButton.interactable = true;
-        }
-        genzhuTotalNum++;
+        GenzhuTotalNum++;
+
         GenzhuButton.interactable = false;
         JiazhuButton.interactable = false;
+        BiButton.interactable = false;
+        QiButton.interactable = false;
         //ShowCardTimeId = Mogo.Util.TimerHeap.AddTimer(0, 500, GenZhuHandler);
-        ChuJetton(headList[0]);
-        ShowCardTimeId = Mogo.Util.TimerHeap.AddTimer<PlayerHead>(500, 0, NextPlayerOpaHandler, headList[1]);
+        BetJetton(headList[0]);
+        ShowCardTimeId = Mogo.Util.TimerHeap.AddTimer<PlayerHead>(500, 0, NextPlayerOpaHandler, headList[0]);
     }
     private List<GameObject> jettonObjList = new List<GameObject>();//
-    private void ChuJetton(PlayerHead head)
+    
+    /// <summary>
+    /// 下注
+    /// </summary>
+    /// <param name="head"></param>
+    private void BetJetton(PlayerHead head)
     {
-        GameObject obj = GameObject.Instantiate<GameObject>(moneyObj.gameObject);
-        obj.SetActive(true);
-        obj.transform.SetParent(moneyParentCon);
-        obj.transform.Reset();
+        GameObject obj = GetJettonObj();
         obj.transform.position = head.transform.position;
-        obj.GetComponent<Image>().sprite = Resources.Load<Sprite>("Textures/room/jetton/" + minJettionData.resPath);
         jettonObjList.Add(obj);
+        obj.gameObject.SetActive(true);
+        obj.GetComponent<Image>().sprite = Resources.Load<Sprite>("Textures/room/jetton/" + minJettionData.resPath);
         Vector3 v = new Vector3(Random.Range(-100, 100), Random.Range(20, 120), 0);
         Tweener tweener = obj.transform.DOLocalMove(v, 0.2f);
-    }
-    private void NextPlayerOpaHandler(PlayerHead head)
-    {
-        int random = Random.Range(0, 10000);
+        head.ChangeJetton(-minJettionData.value);
 
-        ChuJetton(head);
-        if (head.playerIndex + 1 >= playerNum)
+        guizePanel.SetZongZhuAdd(minJettionData.value);
+    }
+    /// <summary>
+    /// 获得筹码对象
+    /// </summary>
+    /// <returns></returns>
+    private GameObject GetJettonObj()
+    {
+        GameObject obj;
+        if(jettonObjList.Count<60)
         {
-            //一轮结束
-            GenzhuButton.interactable = true;
-            JiazhuButton.interactable = true;
+            obj = GameObject.Instantiate<GameObject>(moneyObj.gameObject);
+            obj.SetActive(true);
+            obj.transform.SetParent(moneyParentCon);
+            obj.transform.Reset();
         }
         else
         {
-            ShowCardTimeId = Mogo.Util.TimerHeap.AddTimer<PlayerHead>(500, 0, NextPlayerOpaHandler, headList[head.playerIndex+1]);
+            obj = jettonObjList[0];
+            jettonObjList.RemoveAt(0);
         }
+        
+        return obj;
     }
-    
+    /// <summary>
+    /// 返回剩的人数
+    /// </summary>
+    /// <returns></returns>
+    private int GetSurplusPlayerNum()
+    {
+        int n = 0;
+        for (int i = 0; i < headList.Count; i++)
+        {
+            if(headList[i].IsOver == false)
+            {
+                n++;
+            }
+        }
+        return n;
+    }
+    /// <summary>
+    /// 返回看牌的人数
+    /// </summary>
+    /// <returns></returns>
+    private int GetKanPlayerNum()
+    {
+        int n = 0;
+        for (int i = 0; i < headList.Count; i++)
+        {
+            if (headList[i].IsOver == false && headList[i].dataList != null && headList[i].dataList.Count == 3)
+            {
+                n++;
+            }
+        }
+        return n;
+    }
+    private PlayerHead GetCanBipaiPlayer(PlayerHead head)
+    {
+
+        List<PlayerHead> list = new List<PlayerHead>();
+        for (int i = 0; i < headList.Count; i++)
+        {
+            if(headList[i] != head && headList[i].IsOver == false)
+            {
+                list.Add(headList[i]);
+            }
+        }
+        if(list.Count == 0)
+        {
+            return null;
+        }
+        return list[Random.Range(0, list.Count)];
+
+    }
+    private bool IsGenZhu(PlayerHead head,out bool isBipai)
+    {
+        isBipai = false;
+        //
+        int randomMax = 10000;
+        int surplusPlayerNum = GetSurplusPlayerNum();
+        int kanPlayerNum = GetKanPlayerNum();
+        bool isChujetton = true;
+        CardShapeType type = GetShapeType(head.dataList);//获取牌的类型
+        bool isCanBipai = GenzhuTotalNum >= minBipaiGenzhuNum;//是否可以比牌
+        if(GenzhuTotalNum>20)
+        {
+            isBipai = true;
+        }
+        if (type >= CardShapeType.TONG_HUA_SHUN)
+        {
+
+        }else if (type == CardShapeType.JIN_HUA)
+        {
+
+        }
+        else if (type == CardShapeType.SHUN_ZI)
+        {
+
+        }
+        else if (type == CardShapeType.DUI_ZI)
+        {
+            if (isCanBipai == false && kanPlayerNum > 3 && surplusPlayerNum > 3)
+            {
+                isChujetton = false;
+            }
+            if (isChujetton)
+            {
+                if (isCanBipai)
+                {
+                    isBipai = true;
+                }
+            }
+        }
+        else//单牌
+        {
+            if(kanPlayerNum>2 && surplusPlayerNum>2)
+            {
+                isChujetton = false;
+            }
+            if(isChujetton)
+            {
+                if(isCanBipai)
+                {
+                    isBipai = true;
+                }
+            }
+        }
+
+        return isChujetton;
+    }
+    /// <summary>
+    /// 获取胜利者
+    /// </summary>
+    /// <returns></returns>
+    private List<PlayerHead> GetNotOverPlayer()
+    {
+        List<PlayerHead> list = new List<PlayerHead>();
+        for (int i = 0; i < headList.Count; i++)
+        {
+            if(headList[i].IsOver == false)
+            {
+                list.Add(headList[i]);
+            }
+        }
+        return list;
+    }
+    private void NextPlayerOpaHandler(PlayerHead head)
+    {
+        List<PlayerHead> notOverPlayerList = GetNotOverPlayer();
+        if(notOverPlayerList.Count == 1)
+        {
+            SetWinner(notOverPlayerList[0]);
+            return;
+        }
+        PlayerHead next = null;
+        if(head.playerIndex + 1 == headList.Count)
+        {
+            //到了玩家自己
+            GenzhuTotalNum++;
+            next = headList[0];
+            if (next.IsOver == false)
+            {
+                GenzhuButton.interactable = true;
+                JiazhuButton.interactable = true;
+                QiButton.interactable = true;
+                if (GenzhuTotalNum >= minBipaiGenzhuNum)
+                {
+                    BiButton.interactable = true;
+                }
+                return;//如果自己还没输则返回等待自己手动操作
+            }
+            else
+            {
+                EnabledAllButton(false);
+            }
+        }
+        else
+        {
+            next = headList[head.playerIndex + 1];
+            GenzhuButton.interactable = false;
+            JiazhuButton.interactable = false;
+            QiButton.interactable = false;
+            if (GenzhuTotalNum >= minBipaiGenzhuNum)
+            {
+                BiButton.interactable = false;
+            }
+        }
+        if(next.IsOver)
+        {
+            NextPlayerOpaHandler(next);
+            return;
+        }
+        ShowCardTimeId = Mogo.Util.TimerHeap.AddTimer<PlayerHead>(500, 0, NextPlayerOpaHandler, next);
+        bool isBipai = false;
+        int randomMax = 10000;
+        int random = Random.Range(0, randomMax);
+        bool isChujetton = false;
+        int surplusPlayerNum = GetSurplusPlayerNum();
+        int kanPlayerNum = GetKanPlayerNum();
+        bool isKan = false;
+        if (next.dataList != null && next.dataList.Count == 3)
+        {
+            isKan = true;
+        }
+        if (isKan == false)
+        {
+            //看牌的几率30%
+            if (random < randomMax * 0.5f)
+            {
+                CreatePlayerCardData(next.playerIndex);//看牌
+                next.SetResultText("看牌");
+                isChujetton = IsGenZhu(next, out isBipai);
+            }
+            else
+            {
+                isChujetton = true;
+            }
+        }
+        else
+        {
+            isChujetton = IsGenZhu(next, out isBipai);
+        }
+        if (isChujetton == true)
+        {
+            BetJetton(next);
+            if (isBipai)
+            {
+                PlayerHead bipaiPlayer = GetCanBipaiPlayer(next);
+                if (bipaiPlayer == null)
+                {
+                    SetWinner(next);
+                    return;
+                }
+                else
+                {
+                    bipaipanel.Show(bipaiPlayer, next);
+                    Mogo.Util.TimerHeap.DelTimer(ShowCardTimeId);
+                    ShowCardTimeId = Mogo.Util.TimerHeap.AddTimer<PlayerHead, PlayerHead>(2000, 0, BiPaiResult, bipaiPlayer, next);
+                }
+            }
+        }
+        else
+        {
+            next.GiveUp();
+        }
+
+    }
     protected override void OnShow(params object[] args)
     {
         InitPlayer();
-        ResetData();
         buttonParentCon.gameObject.SetActive(false);
         ReadlyButton.gameObject.SetActive(true);
         
@@ -276,34 +649,13 @@ public class MainScenePanel : IViewBase
             
             PlayerData data = new PlayerData();
             data.name = "我是" + i;
-            data.glodNum = i * 10000;
+            data.glodNum = 100000;
             head.SetData(data);
             headList.Add(head);
             head.playerIndex = i;
         }
     }
-    /// <summary>
-    /// 整理牌
-    /// </summary>
-    private void ReadlyCard()
-    {
-        GameObject card = GameObject.Instantiate<GameObject>(Resources.Load<GameObject>("GUI/CardPrefab"));
-        card.transform.SetParent(CardItemParent);
-        card.transform.localScale = Vector3.one;
-        CardItem item = card.AddComponent<CardItem>();
-        readlyCardItemList.Add(item);
-        //布局
-        int x = tempCardIndex * gap - (readlyMaxNum / 2) * gap;
-        card.GetComponent<RectTransform>().anchoredPosition = new Vector2(x, 130);
-        if (tempCardIndex >= readlyMaxNum)
-        {
-            Mogo.Util.TimerHeap.DelTimer(ShowCardTimeId);
-            tempCardIndex = 0;
-            ShowCardTimeId = Mogo.Util.TimerHeap.AddTimer(1000, 80, FaPaiHandler);
-            return;
-        }
-        tempCardIndex++;
-    }
+    
     private void ResetData()
     {
         cardDataList.Clear();
@@ -335,6 +687,8 @@ public class MainScenePanel : IViewBase
             }
             headList[index].SetCardData(dataList);
         }
+        //测试可以打开
+        //ShowPlayerCard(index);
     }
     /// <summary>
     /// 显示卡牌
@@ -381,6 +735,10 @@ public class MainScenePanel : IViewBase
             Mogo.Util.TimerHeap.DelTimer(ShowCardTimeId);
             GenzhuButton.interactable = true;
             JiazhuButton.interactable = true;
+            if (GenzhuTotalNum >= minBipaiGenzhuNum)
+            {
+                BiButton.interactable = true;
+            }
         }
     }
     /// <summary>
@@ -404,12 +762,22 @@ public class MainScenePanel : IViewBase
     }
     private PlayerHead BiJiao(PlayerHead head1, PlayerHead head2)
     {
+        if(head1.IsHaveData() == false)
+        {
+            CreatePlayerCardData(head1.playerIndex);
+        }
+        if (head2.IsHaveData() == false)
+        {
+            CreatePlayerCardData(head2.playerIndex);
+        }
         if (BiJiao(head1.dataList, head2.dataList))
         {
+            head2.IsOver = true;
             return head1;
         }
         else
         {
+            head1.IsOver = true;
             return head2;
         }
     }
@@ -566,5 +934,4 @@ public class MainScenePanel : IViewBase
 
     }
 
-    
 }

@@ -18,6 +18,8 @@ public class PlayerHead : MonoBehaviour {
     private Button bipaiButton;
     private bool isOver;
     public int playerIndex;
+    private int changeJetton = 0;
+    private Text resultText;
     public void SetData(PlayerData data)
     {
         this.data = data;
@@ -25,6 +27,8 @@ public class PlayerHead : MonoBehaviour {
         headImage = this.transform.Find("Head").GetComponent<Image>();
         glodNumText = this.transform.Find("GlodNumText").GetComponent<Text>();
         cardCon = this.transform.Find("CardCon");
+        resultText = this.transform.Find("resultText").GetComponent<Text>();
+        resultText.text = "";
         if(this is MySelfHead == false)
         {
             bipaiButton = this.transform.Find("BiPaiButton").GetComponent<Button>();
@@ -40,7 +44,20 @@ public class PlayerHead : MonoBehaviour {
         nameText.text = data.name;
         glodNumText.text = data.glodNum.ToString();
     }
-
+    /// <summary>
+    /// 变动的筹码
+    /// </summary>
+    /// <param name="jetton"></param>
+    public void ChangeJetton(int jetton)
+    {
+        changeJetton += jetton;
+        data.glodNum += jetton;
+        glodNumText.text = data.glodNum.ToString();
+    }
+    public int GetChangeJetton()
+    {
+        return changeJetton;
+    }
     private void BiPaiButtonOnClick()
     {
         Mogo.Util.EventDispatcher.TriggerEvent<PlayerHead>(GUIEvent.BI_PAI_BUTTON_CLICK, this);
@@ -61,9 +78,17 @@ public class PlayerHead : MonoBehaviour {
         index++;
         return conList[tempIndex];
     }
+    public void SetResultText(string text)
+    {
+        resultText.text = text;
+    }
     public void Reset()
     {
         index = 0;
+        dataList = null;
+        cardItemList.Clear();
+        isOver = false;
+        resultText.text = "";
     }
     /// <summary>
     /// 设置牌数据
@@ -99,6 +124,8 @@ public class PlayerHead : MonoBehaviour {
         {
             cardItemList[i].GiveUp();
         }
+        isOver = true;
+        SetResultText("弃牌");
     }
     /// <summary>
     /// 是否有数据
@@ -120,10 +147,10 @@ public class PlayerHead : MonoBehaviour {
             if (isOver)
             {
                 GiveUp();
+                SetResultText("输");
             }
         }
     }
-
     internal void GoBack()
     {
         for (int i = 0; i < cardItemList.Count; i++)
