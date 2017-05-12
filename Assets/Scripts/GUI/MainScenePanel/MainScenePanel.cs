@@ -204,7 +204,15 @@ public class MainScenePanel : IViewBase
             return;
         }
         //Debug.LogError("最大的牌：" + head.data.name);
-        NextPlayerOpaHandler(head2);
+        if (head2 is MySelfHead && head2.IsOver == false)
+        {
+            NextPlayerOpaHandler(head2);
+        }
+        else
+        {
+            Mogo.Util.TimerHeap.AddTimer<PlayerHead>(1000, 0, NextPlayerOpaHandler, head2);
+        }
+        //
     }
     private void HideAllBiPaiButton()
     {
